@@ -1,0 +1,269 @@
+@facilityId = 6adb5006623cbbdfc5fff953
+@deleteId = 6adb5040623cbbdfc5fff956
+
+@bookingId = 6adb5006623cbbdfc5fff953
+
+### Get all facilities
+GET http://localhost:5000/api/facilities
+### Add a facility
+POST http://localhost:5000/api/facilities
+Content-Type: application/json
+
+{
+  "name": "Basketball Court A",
+  "type": "Court",
+  "capacity": 20,
+  "hourlyRate": 500,
+  "description": "Full-size indoor court with bleachers"
+}
+
+### Add a pool
+POST http://localhost:5000/api/facilities
+Content-Type: application/json
+
+{
+  "name": "Swimming Pool",
+  "type": "Pool",
+  "capacity": 30,
+  "hourlyRate": 800
+}
+
+### Add a studio (no hourlyRate, should default to 0)
+POST http://localhost:5000/api/facilities
+Content-Type: application/json
+
+{
+  "name": "Yoga Studio",
+  "type": "Studio",
+  "capacity": 15
+}
+
+### Break the rules on purpose (expect 400)
+POST http://localhost:5000/api/facilities
+Content-Type: application/json
+
+{
+  "name": "Mystery Room",
+  "type": "Gym",
+  "capacity": 0
+}
+
+
+### Search: "court"
+GET http://localhost:5000/api/facilities?q=court
+
+### Search: uppercase "POOL"
+GET http://localhost:5000/api/facilities?q=POOL
+
+### Search: by type "studio"
+GET http://localhost:5000/api/facilities?q=studio
+
+### Search: nothing matches
+GET http://localhost:5000/api/facilities?q=tennis
+
+
+### Edit: change capacity and rate
+PUT http://localhost:5000/api/facilities/{{facilityId}}
+Content-Type: application/json
+
+{
+  "capacity": 40,
+  "hourlyRate": 600
+}
+
+### Edit with a bad value (expect 400)
+PUT http://localhost:5000/api/facilities/{{facilityId}}
+Content-Type: application/json
+
+{
+  "capacity": -5
+}
+
+### Delete the Yoga Studio
+DELETE http://localhost:5000/api/facilities/{{deleteId}}
+
+### Invalid ID format (expect 400)
+GET http://localhost:5000/api/facilities/abc123
+
+
+### Get all bookings
+GET http://localhost:5000/api/bookings
+
+
+
+### Booking 1: valid (expect 201)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Juan Dela Cruz",
+  "contactNumber": "09171234567",
+  "email": "Juan@Gmail.com",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-30",
+  "startTime": "15:00",
+  "endTime": "17:00",
+  "numberOfPeople": 10,
+  "purpose": "Game"
+}
+
+
+### Test 1: overlapping time 16:00-18:00 (expect 409)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Maria Santos",
+  "contactNumber": "09181234567",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-30",
+  "startTime": "16:00",
+  "endTime": "18:00",
+  "numberOfPeople": 8
+}
+
+### Test 2: back-to-back 17:00-19:00 (expect 201)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Maria Santos",
+  "contactNumber": "09181234567",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-30",
+  "startTime": "17:00",
+  "endTime": "19:00",
+  "numberOfPeople": 8
+}
+
+### Test 3: end time before start time (expect 400)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Pedro Reyes",
+  "contactNumber": "09191234567",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-31",
+  "startTime": "18:00",
+  "endTime": "16:00",
+  "numberOfPeople": 5
+}
+
+### Test 4: too many people (expect 400)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Pedro Reyes",
+  "contactNumber": "09191234567",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-31",
+  "startTime": "08:00",
+  "endTime": "10:00",
+  "numberOfPeople": 40
+}
+
+### Test 5: date in the past (expect 400)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Pedro Reyes",
+  "contactNumber": "09191234567",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-01",
+  "startTime": "08:00",
+  "endTime": "10:00",
+  "numberOfPeople": 5
+}
+
+### Test 6: bad formats (expect 400)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "A",
+  "contactNumber": "0917-123-4567",
+  "email": "pedro.gmail.com",
+  "facility": "{{facilityId}}",
+  "bookingDate": "2026-10-31",
+  "startTime": "8am",
+  "endTime": "10:00",
+  "numberOfPeople": 5
+}
+
+### Test 7: missing required fields (expect 400)
+POST http://localhost:5000/api/bookings
+Content-Type: application/json
+
+{
+  "customerName": "Pedro Reyes"
+}
+
+
+### Search by name
+GET http://localhost:5000/api/bookings?q=juan
+
+### Search by part of a contact number
+GET http://localhost:5000/api/bookings?q=0918
+
+### Filter by date
+GET http://localhost:5000/api/bookings?date=2026-10-30
+
+### Combine: Maria's pending bookings
+GET http://localhost:5000/api/bookings?q=maria&status=Pending
+
+
+### Edit 1: confirm the booking (expect 200)
+PUT http://localhost:5000/api/bookings/{{bookingId}}
+Content-Type: application/json
+
+{
+  "status": "Confirmed"
+}
+
+### Edit 2: start earlier, 14:00 (expect 200)
+PUT http://localhost:5000/api/bookings/{{bookingId}}
+Content-Type: application/json
+
+{
+  "startTime": "14:00"
+}
+
+### Edit 3: extend into Maria's slot (expect 409)
+PUT http://localhost:5000/api/bookings/{{bookingId}}
+Content-Type: application/json
+
+{
+  "endTime": "20:00"
+}
+
+### Delete Juan's booking
+DELETE http://localhost:5000/api/bookings/{{bookingId}}
+
+
+### Try to delete Court A, which has Maria's booking (expect 409)
+DELETE http://localhost:5000/api/facilities/{{facilityId}}
+
+### Create a temporary facility with no bookings
+POST http://localhost:5000/api/facilities
+Content-Type: application/json
+
+{
+  "name": "Temporary Room",
+  "type": "Room",
+  "capacity": 5
+}
+
+### Delete the temporary room (expect 200)
+DELETE http://localhost:5000/api/facilities/paste-the-temporary-room-id-here
+
+
+### Mark Court A unavailable
+PUT http://localhost:5000/api/facilities/{{facilityId}}
+Content-Type: application/json
+
+{
+  "isAvailable": true
+}
