@@ -5,8 +5,13 @@ const api = axios.create({
 });
 
 // Pulls the server's error message out of a failed request
-export const getErrorMessage = (err) =>
-  err.response?.data?.message || 'Could not reach the server. Is it running?';
+   export const getErrorMessage = (err) => {
+     const data = err.response?.data;
+     if (data?.message) {
+       return data.error ? `${data.message}: ${data.error}` : data.message;
+     }
+     return 'Could not reach the server. Is it running?';
+   };
 
 // ---------- Facilities ----------
 export const getFacilities = (q = '') =>
