@@ -30,12 +30,8 @@ const toDateString = (value) =>
   value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 
 // Today's date on this computer as "2026-10-26"
-const todayString = () => {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-};
+// Today's date in the Philippines as "2026-10-29"
+const todayString = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
 
 // Returns null if everything is OK, or { status, message } describing the problem
 const checkBookingRules = async (data, excludeId = null, checkPastDate = true) => {

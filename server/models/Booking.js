@@ -67,17 +67,20 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Creates the booking code automatically, like "GB-20261029-001"
 bookingSchema.pre('validate', async function () {
   if (this.bookingCode) return;
 
-    // Today's date in the Philippines, like "20261028"
+  // Today's date in the Philippines, like "20261029"
   const datePart = new Date()
     .toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
     .replaceAll('-', '');
   const prefix = `GB-${datePart}-`;
 
-  // Today's date in the Philippines as "2026-10-28"
-const todayString = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+  // Find today's booking with the highest code
+  const lastBooking = await this.constructor
+    .findOne({ bookingCode: { $regex: `^${prefix}` } })
+    .sort({ bookingCode: -1 });
 
   // Take its last 3 digits as a number, or 0 if there's none yet today
   const lastNumber = lastBooking ? Number(lastBooking.bookingCode.slice(-3)) : 0;
